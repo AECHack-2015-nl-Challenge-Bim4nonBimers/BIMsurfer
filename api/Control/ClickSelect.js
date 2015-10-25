@@ -150,7 +150,7 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 		this.lastSelected = Date.now();
 		var o = this;
 		window.setTimeout(function(){
-			o.events.trigger('select', [groupId, o.highlighted]);
+			o.events.trigger('select', [groupId, highlighted]);
 		}, 0);
 	},
 
@@ -171,16 +171,16 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 				var matrix = highlighted.nodes[0];
 				var geometryNode = matrix.nodes[0];
 
-				// if (geometryNode._core.arrays.colors != null) {
+				if (geometryNode._core.arrays.colors != null) {
 					matrix.removeNode(geometryNode);
 
 					var newGeometry = {
 						type: "geometry",
-						coreId: geometryNode.getCoreId().replace("Highlighted", "")
+						coreId: typeof geometryNode.getCoreId() === 'string' ? geometryNode.getCoreId().replace("Highlighted", "") : geometryNode.getCoreId()
 					}
 
 					matrix.addNode(newGeometry);
-				// }
+				}
 
 				highlighted.splice();
 
