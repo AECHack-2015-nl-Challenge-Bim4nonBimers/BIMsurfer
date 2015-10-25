@@ -166,7 +166,7 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 				var matrix = highlighted.nodes[0];
 				var geometryNode = matrix.nodes[0];
 
-				if (geometryNode._core.arrays.colors) {
+				if (geometryNode._core.arrays.colors != null) {
 					matrix.removeNode(geometryNode);
 
 					var newGeometry = {
