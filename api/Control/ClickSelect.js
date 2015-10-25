@@ -23,6 +23,7 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	 * The selected and highlighted SceneJS nodes
 	 */
 	highlightedArray: [],
+	highlighted: null,
 
 	/**
 	 * Timestamp of the last selection
@@ -101,14 +102,14 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	 * @param {SceneJS.node} hit Selected SceneJS node
 	 */
 	pick: function(hit) {
-		var hitNode = this.SYSTEM.scene.findNode(hit.nodeId);
-		var index = this.highlightedArray.indexOf(hitNode);
+		var highlighted = this.SYSTEM.scene.findNode(hit.nodeId);
+		var index = this.highlightedArray.indexOf(highlighted);
 		if (index > -1) {
-			this.unselectElement(hitNode);
+			this.highlighted = highlighted;
+			this.unselect();
 			this.highlightedArray.splice(index, 1);
 			return;
 		}
-		var highlighted = this.SYSTEM.scene.findNode(hit.nodeId);
 		this.highlightedArray.push(highlighted);
 		var groupId = highlighted.findParentByType("translate").data.groupId;
 		var matrix = highlighted.nodes[0];
@@ -146,7 +147,6 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 		}
 
 		highlighted.insert('node', BIMSURFER.Constants.highlightSelectedObject);
-
 		this.lastSelected = Date.now();
 		var o = this;
 		window.setTimeout(function(){
@@ -158,16 +158,11 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	 * Event listener
 	 */
 	unselect: function() {
-		var highlightedElements = this.SYSTEM.scene.findNodes(BIMSURFER.Constants.highlightSelectedObject.id);
-		for (var i = 0; i < highlightedElements.length; i++) {
-			this.unselectElement(highlightedElements[i]);
-		}
-	},
-
-	unselectElement: function(highlighted) {
+		var highlighted = this.SYSTEM.scene.findNode(BIMSURFER.Constants.highlightSelectedObject.id);
 		if (highlighted != null) {
 			var groupId = highlighted.findParentByType("translate").data.groupId;
-			if (highlighted != null) {
+			if(highlighted != null)
+			{
 				var matrix = highlighted.nodes[0];
 				var geometryNode = matrix.nodes[0];
 
@@ -176,7 +171,7 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 
 					var newGeometry = {
 						type: "geometry",
-						coreId: typeof geometryNode.getCoreId() === 'string' ? geometryNode.getCoreId().replace("Highlighted", "") : geometryNode.getCoreId()
+						coreId: geometryNode.getCoreId().replace("Highlighted", "")
 					}
 
 					matrix.addNode(newGeometry);
@@ -184,7 +179,8 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 
 				highlighted.splice();
 
-				this.events.trigger('unselect', [highlighted == null || highlighted.findParentByType("translate") == undefined ? null : highlighted.findParentByType("translate").groupId, highlighted]);
+				this.events.trigger('unselect', [this.highlighted == null ? null : this.highlighted.findParentByType("translate").groupId, this.highlighted]);
+				this.highlighted = null;
 			}
 		}
 	}
