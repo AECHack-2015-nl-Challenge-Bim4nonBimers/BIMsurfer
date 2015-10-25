@@ -180,6 +180,8 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 				highlighted.splice();
 
 				this.events.trigger('unselect', [this.highlighted == null ? null : this.highlighted.findParentByType("translate").groupId, this.highlighted]);
+				var index = this.highlightedArray.indexOf(this.highlighted);
+				this.highlightedArray.splice(index, 1);
 				this.highlighted = null;
 			}
 		}
