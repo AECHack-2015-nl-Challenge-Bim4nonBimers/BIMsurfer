@@ -107,7 +107,6 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 		if (index > -1) {
 			this.highlighted = highlighted;
 			this.unselect();
-			this.highlightedArray.splice(index, 1);
 			return;
 		}
 		this.highlightedArray.push(highlighted);
