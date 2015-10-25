@@ -157,7 +157,7 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	 * Event listener
 	 */
 	unselect: function() {
-		var highlighted = this.SYSTEM.scene.findNode(BIMSURFER.Constants.highlightSelectedObject.id);
+		var highlighted = this.highlighted.getNode(BIMSURFER.Constants.highlightSelectedObject.id);
 		if (highlighted != null) {
 			var groupId = highlighted.findParentByType("translate").data.groupId;
 			if(highlighted != null)
