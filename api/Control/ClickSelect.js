@@ -20,9 +20,9 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	active: false,
 
 	/**
-	 * The selected and highlighted SceneJS node
+	 * The selected and highlighted SceneJS nodes
 	 */
-	highlighted: null,
+	highlightedArray: [],
 
 	/**
 	 * Timestamp of the last selection
@@ -90,7 +90,7 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	mouseUp: function(e) {
 		if(((e.offsetX > this.downX) ? (e.offsetX - this.downX < 5) : (this.downX - e.offsetX < 5)) &&	((e.offsetY > this.downY) ? (e.offsetY - this.downY < 5) : (this.downY - e.offsetY < 5))) {
 			if(Date.now() - this.lastSelected > 10) {
-				this.unselect();
+				// this.unselect();
 			}
 		}
 	},
@@ -101,11 +101,17 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	 * @param {SceneJS.node} hit Selected SceneJS node
 	 */
 	pick: function(hit) {
-		this.unselect();
-		this.highlighted = this.SYSTEM.scene.findNode(hit.nodeId);
-		var groupId = this.highlighted.findParentByType("translate").data.groupId;
-
-		var matrix = this.highlighted.nodes[0];
+		var hitNode = this.SYSTEM.scene.findNode(hit.nodeId);
+		var index = this.highlightedArray.indexOf(hitNode);
+		if (index > -1) {
+			this.unselectElement(hitNode);
+			this.highlightedArray.splice(index, 1);
+			return;
+		}
+		var highlighted = this.SYSTEM.scene.findNode(hit.nodeId);
+		this.highlightedArray.push(highlighted);
+		var groupId = highlighted.findParentByType("translate").data.groupId;
+		var matrix = highlighted.nodes[0];
 		var geometryNode = matrix.nodes[0];
 
 		if (geometryNode._core.arrays.colors != null) {
@@ -113,12 +119,12 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 				type: "geometry",
 				primitive: "triangles"
 			};
-	
+
 			geometry.coreId = geometryNode.getCoreId() + "Highlighted";
 			geometry.indices = geometryNode._core.arrays.indices;
 			geometry.positions = geometryNode._core.arrays.positions;
 			geometry.normals = geometryNode._core.arrays.normals;
-			
+
 			geometry.colors = [];
 			for (var i=0; i<geometryNode._core.arrays.colors.length; i+=4) {
 				geometry.colors[i] = 0;
@@ -126,20 +132,21 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 				geometry.colors[i+2] = 0;
 				geometry.colors[i+3] = 1;
 			}
-			
+
 			var library = this.SYSTEM.scene.findNode("library-" + groupId);
 			library.add("node", geometry);
-			
+
 			var newGeometry = {
 				type: "geometry",
 				coreId: geometryNode.getCoreId() + "Highlighted"
 			}
-			
+
 			matrix.removeNode(geometryNode);
 			matrix.addNode(newGeometry);
 		}
-		
-		this.highlighted.insert('node', BIMSURFER.Constants.highlightSelectedObject);
+
+		highlighted.insert('node', BIMSURFER.Constants.highlightSelectedObject);
+
 		this.lastSelected = Date.now();
 		var o = this;
 		window.setTimeout(function(){
@@ -151,29 +158,33 @@ BIMSURFER.Control.ClickSelect = BIMSURFER.Class(BIMSURFER.Control, {
 	 * Event listener
 	 */
 	unselect: function() {
-		var highlighted = this.SYSTEM.scene.findNode(BIMSURFER.Constants.highlightSelectedObject.id);
+		var highlightedElements = this.SYSTEM.scene.findNodes(BIMSURFER.Constants.highlightSelectedObject.id);
+		for (var i = 0; i < highlightedElements.length; i++) {
+			this.unselectElement(highlightedElements[i]);
+		}
+	},
+
+	unselectElement: function(highlighted) {
 		if (highlighted != null) {
 			var groupId = highlighted.findParentByType("translate").data.groupId;
-			if(highlighted != null)
-			{
+			if (highlighted != null) {
 				var matrix = highlighted.nodes[0];
 				var geometryNode = matrix.nodes[0];
-				
-				if (geometryNode._core.arrays.colors != null) {
+
+				// if (geometryNode._core.arrays.colors != null) {
 					matrix.removeNode(geometryNode);
-					
+
 					var newGeometry = {
 						type: "geometry",
 						coreId: geometryNode.getCoreId().replace("Highlighted", "")
 					}
-					
+
 					matrix.addNode(newGeometry);
-				}
-				
+				// }
+
 				highlighted.splice();
-				
-				this.events.trigger('unselect', [this.highlighted == null ? null : this.highlighted.findParentByType("translate").groupId, this.highlighted]);
-				this.highlighted = null;
+
+				this.events.trigger('unselect', [highlighted == null || highlighted.findParentByType("translate") == undefined ? null : highlighted.findParentByType("translate").groupId, highlighted]);
 			}
 		}
 	}
